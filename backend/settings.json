@@ -1,0 +1,16 @@
+{
+  "Message": {
+    "create": {
+      "user": "64b7e1c38210e8255187cf71",
+      "messageContent": "Testing createMessage"
+    },
+    "update": {
+      "messageContent": "Testing updateMessage",
+      "user": "64b7e1c38210e8255187cf71"
+    }
+  },
+  "User": {
+    "create": {},
+    "update": {}
+  }
+}
