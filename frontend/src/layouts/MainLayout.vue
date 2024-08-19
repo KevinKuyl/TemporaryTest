@@ -1,6 +1,6 @@
 <template>
   <q-layout view="lHh Lpr lFf">
-    <q-drawer v-model="leftDrawerOpen" bordered>
+    <q-drawer v-model="globalsStore.drawer" bordered>
       <q-list>
         <q-item-label header> Menu </q-item-label>
 
@@ -13,14 +13,16 @@
     </q-drawer>
 
     <q-page-container>
-      <router-view @click="toggleLeftDrawer" />
+      <router-view />
     </q-page-container>
   </q-layout>
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { useGlobalsStore } from "src/stores/GlobalsStore";
 import EssentialLink from "components/EssentialLink.vue";
+
+const globalsStore = useGlobalsStore();
 
 defineOptions({
   name: "MainLayout",
@@ -28,22 +30,22 @@ defineOptions({
 
 const linksList = [
   {
-    title: "Water",
-    caption: "quasar.dev",
-    icon: "school",
-    link: "https://quasar.dev",
+    title: "Home",
+    caption: "Overzicht van alle data",
+    icon: "home",
+    link: "/",
   },
   {
-    title: "Verlichting",
-    caption: "github.com/quasarframework",
-    icon: "code",
+    title: "Instellingen",
+    caption: "Apparaten, sensoren",
+    icon: "settings",
+    link: "/settings",
+  },
+  {
+    title: "Automatisering",
+    caption: "Automatische taken en regels",
+    icon: "precision_manufacturing",
     link: "https://github.com/quasarframework",
   },
 ];
-
-const leftDrawerOpen = ref(false);
-
-function toggleLeftDrawer() {
-  leftDrawerOpen.value = !leftDrawerOpen.value;
-}
 </script>

@@ -6,13 +6,13 @@ export const SensorSchema = new Mongoose.Schema(
   {
   name: {
     type: String,
-    required: false,
-    unique: false
+    required: true,
+    unique: true
   },
-  values: {
+  pin: {
     type: String,
-    required: false,
-    unique: false
+    required: true,
+    unique: true
   }
 }, {
   collection: 'sensor',
@@ -109,8 +109,8 @@ Sensor.deleteSensor = async function ({ id }, { user }, pubsub) {
     const sensor = await Sensor.findById(id)
       
     if (sensor) {
-      sensor.deleted = true;
-      const res = await sensor.save();
+      // hard delete
+      const res = await Sensor.deleteOne({ _id: id });
       pubsub.publish('sensorDeleted', { sensorDeleted: res });
       return 
     } else {

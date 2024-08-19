@@ -19,17 +19,9 @@ const config = {
         //private: process.env.private_key,
         //public: process.env.public_key
     },
-    DOSpaces: {
-        accessKeyId: process.env.do_spaces_access_key_id,
-        secretAccessKey: process.env.do_spaces_secret_access_key
+    ports: {
+        com: process.env.com_port
     },
-    mail: {
-        host: process.env.mail_host,
-        password: process.env.mail_password,
-        user: process.env.mail_user,
-        from: process.env.mail_from,
-        port: process.env.mail_port
-    }
 };
 
 export { config };

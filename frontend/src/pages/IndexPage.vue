@@ -54,10 +54,11 @@
           </div>
 
           <div class="col flex flex-center">
-            <div class="col-12 text-h3 text-center" style="height: 80vh">
+            <div class="col-12 text-h1 text-center full-width" style="height: 80vh" @click="globalsStore.toggleDrawer">
               <div>{{ time }}</div>
-              <div class="text-h6">{{ date }}</div>
+              <div class="text-h5">{{ date }}</div>
             </div>
+
             <div class="col-12 text-center">
               <q-icon
                 name="power_settings_new"
@@ -177,8 +178,10 @@
 
 <script setup>
 import { ref } from "vue";
+import { useGlobalsStore } from "src/stores/GlobalsStore";
 import RadialSensorReading from "src/components/RadialSensorReading.vue";
 
+const globalsStore = useGlobalsStore();
 const time = ref(new Date().toLocaleTimeString());
 const date = ref(
   new Date().toLocaleDateString("en-US", {
@@ -208,17 +211,7 @@ const values = ref({
   },
 });
 
-const switches = ref([
-  {
-    fn() {
-      // execute something here
-      console.log("button clicked");
-    },
-    state: "false",
-  },
-]);
-
-const update = setInterval(() => {
+setInterval(() => {
   time.value = new Date().toLocaleTimeString();
   date.value = new Date().toLocaleDateString("en-US", {
     year: "numeric",
@@ -226,6 +219,7 @@ const update = setInterval(() => {
     day: "numeric",
   });
 }, 500);
+
 </script>
 <style>
 .darker {
