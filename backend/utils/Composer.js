@@ -310,3 +310,4 @@ ${prefix}type Subscription {
 }
 
 export default Composer;
+export { pubsub };

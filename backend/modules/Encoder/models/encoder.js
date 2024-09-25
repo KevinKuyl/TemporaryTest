@@ -1,6 +1,9 @@
 import uniqueValidator from 'mongoose-unique-validator';
 import timestamps from 'mongoose-timestamp';
 import Mongoose from 'mongoose';
+import Automation from '../../Automation/models/automation.js';
+import rotaryEncoder from '../../../utils/RotaryEncoder.js';
+import PWMDevice from '../../PWMDevice/models/pwmDevice.js';
 
 export const EncoderSchema = new Mongoose.Schema(
   {
@@ -109,6 +112,11 @@ Encoder.updateEncoder = async function ({ encoder }, { user }, pubsub) {
   try {
     if (encoder._id) {
       let encoderToUpdate = await Encoder.findById(encoder._id)
+      
+      let automations = await Automation.find({
+        inModel: "Encoder",
+        inId: encoder._id,
+      }).exec();
         
       if (encoderToUpdate) {
         for (let field in encoder) {
@@ -117,6 +125,26 @@ Encoder.updateEncoder = async function ({ encoder }, { user }, pubsub) {
             encoderToUpdate[field] = encoder[field];
           }
         }
+
+        automations.forEach(async (automation) => {
+          switch (automation.setModel) {
+            case "PWMDevice":
+              const device = await PWMDevice.findById(automation.setId).exec();
+              if (device) {
+                device.value = encoderToUpdate.value;
+                // update the device
+                // const pwm = new five.Led(device.pin);
+                // pwm.brightness(device.value);
+                automation.value = encoderToUpdate.value;
+                await Automation.updateAutomation({ automation }, {}, pubsub);
+                await PWMDevice.updatePWMDevice({ pwmdevice: device }, {}, pubsub);
+              }
+              break;
+            default:
+              break;
+          }
+        });   
+
         await encoderToUpdate.save();
         pubsub.publish('encoderUpdated', { encoderUpdated: encoderToUpdate });
         return encoderToUpdate;

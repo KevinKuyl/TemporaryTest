@@ -1,6 +1,7 @@
 import uniqueValidator from 'mongoose-unique-validator';
 import timestamps from 'mongoose-timestamp';
 import Mongoose from 'mongoose';
+import five from 'johnny-five';
 
 export const PWMDeviceSchema = new Mongoose.Schema(
   {
@@ -97,6 +98,8 @@ PWMDevice.updatePWMDevice = async function ({ pwmdevice }, { user }, pubsub) {
         }
         await pwmdeviceToUpdate.save();
         pubsub.publish('pwmdeviceUpdated', { pwmdeviceUpdated: pwmdeviceToUpdate });
+        const device = new five.Led(pwmdeviceToUpdate.pin);
+        device.brightness(pwmdeviceToUpdate.value);
         return pwmdeviceToUpdate;
       } else {
         return new Error(`PWMDevice not found.`, { argumentName: '_id' });

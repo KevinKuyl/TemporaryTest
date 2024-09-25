@@ -33,5 +33,14 @@ export const permissions = {
   },
   messageDeleted(payload, variables, context, info) {
     return isAuthenticated(payload, variables, context, info);
-  }
+  },
+  sonarCreated(payload, variables, context, info) {
+    return allow
+  },
+  sonarUpdated(payload, variables, context, info) {
+    return allow
+  },
+  sonarDeleted(payload, variables, context, info) {
+    return allow
+  },
 }

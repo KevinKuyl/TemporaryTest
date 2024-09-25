@@ -3,6 +3,10 @@ import http from "http";
 import bodyParser from "body-parser";
 import cors from "cors";
 import mongooseClient from "./database/mongooseClient.js";
+// const { PubSub, withFilter } = pkg;
+// const pubsub = new PubSub();
+import { pubsub } from "./utils/Composer.js";
+
 import five from "johnny-five";
 import RotaryEncoder from "./utils/RotaryEncoder.js";
 //import process from "process";
@@ -25,6 +29,7 @@ import { applyMiddleware } from "graphql-middleware";
 import { SubscriptionServer } from "subscriptions-transport-ws";
 import { execute, subscribe } from "graphql";
 import { set } from "mongoose";
+
 
 const app = express();
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -124,7 +129,7 @@ board.on("ready", async function () {
     });
 
     const readings = [];
-    const maxReadings = 50;
+    const maxReadings = 10;
 
     sonar.on("data", function () {
       if (readings.length >= maxReadings) {
@@ -134,11 +139,9 @@ board.on("ready", async function () {
 
       const average =
         readings.reduce((sum, value) => sum + value, 0) / readings.length;
-      console.log(`Average Distance: ${average.toFixed(2)} cm`);
-      Sonar.updateOne(
-        { _id: sensor._id },
-        { $set: { distance: average.toFixed(2) } }
-      ).exec();
+      sensor.distance = average.toFixed(2);
+      console.log(`Average Distance: ${sensor.distance} cm`); 
+      Sonar.updateSonar({ sonar: sensor }, {}, pubsub);
     });
 
     sonar.on("change", function () {
@@ -167,16 +170,14 @@ board.on("ready", async function () {
               } else {
                 led.off();
               }
-              await device.save();
+              await PWMDevice.updatePWMDevice({ pwmdevice: pwmDevice }, {}, pubsub);
             }
             break;
           case "PWMDevice":
             const pwmDevice = await PWMDevice.findById(automation.setId).exec();
             if (pwmDevice) {
-              pwmDevice.value = input.value === 1 ? 255 : 0;
-              const pwm = new five.Led(pwmDevice.pin);
-              pwm.brightness(pwmDevice.value);
-              await pwmDevice.save();
+              pwmDevice.value = input.value > 0 ? 255 : 0;
+              await PWMDevice.updatePWMDevice({ pwmdevice: pwmDevice }, {}, pubsub);
             }
             break;
           default:
@@ -209,10 +210,7 @@ board.on("ready", async function () {
     }).exec();
 
     const update = async (encoder) => {
-      await Encoder.updateOne(
-        { _id: encoder._id },
-        { $set: { value: encoder.value } }
-      ).exec();
+      await Encoder.updateEncoder({ encoder }, {}, pubsub);
 
       console.log(`Automations: ${automations.length}`);
 
@@ -222,10 +220,7 @@ board.on("ready", async function () {
             const device = await PWMDevice.findById(automation.setId).exec();
             if (device) {
               device.value = encoder.value;
-              // update the device
-              const pwm = new five.Led(device.pin);
-              pwm.brightness(device.value);
-              await device.save();
+              await PWMDevice.updatePWMDevice({ pwmdevice: device }, {}, pubsub);
             }
             break;
           default:
@@ -239,30 +234,45 @@ board.on("ready", async function () {
       downButton,
       pressButton,
       onUp: () => {
-        if (encoder.value < max) {
-          encoder.value += encoder.step;
-          update(encoder);
-        }
-        console.log(`Encoder: ${encoder.name} up: ${encoder.value}`);
-      },
-      onDown: () => {
         if (encoder.value > min) {
           encoder.value -= encoder.step;
           update(encoder);
         }
         console.log(`Encoder: ${encoder.name} down: ${encoder.value}`);
       },
+      onDown: () => {
+        if (encoder.value < max) {
+          encoder.value += encoder.step;
+          update(encoder);
+        }
+        console.log(`Encoder: ${encoder.name} up: ${encoder.value}`);
+      },
       onPress: () => {
-        console.log(`Encoder: ${encoder.name} button press`);
+        // console.log(`Encoder: ${encoder.name} button press`);
       },
     });
+    // set all devices to their last known state
+    pwmDevices.forEach((device) => {
+      console.log(
+        `PWM Device: ${device.name}, pin: ${device.pin}, value: ${device.value}`
+      );
+      const pwm = new five.Led(device.pin);
+      pwm.brightness(device.value);
+    });
+
+    //thermistor 
+    const temp = new five.Thermometer({
+      pin: "A6",
+      toCelsius: function(raw) { // optional
+        return (raw / 18);
+      }
+    });
+    
+    temp.on("change", function () {
+      console.log(this.celsius.toFixed(2) + "°C");
+    });
+
   });
 
-  pwmDevices.forEach((device) => {
-    console.log(
-      `PWM Device: ${device.name}, pin: ${device.pin}, value: ${device.value}`
-    );
-    const pwm = new five.Led(device.pin);
-    pwm.brightness(device.value);
-  });
+
 });

@@ -20,7 +20,7 @@ export default function rotaryEncoder({ upButton, downButton, pressButton, onUp,
       if (waveform.length < 2) {
         waveformTimeout = setTimeout(() => {
           waveform = "";
-        }, 100);
+        }, 30);
         return;
       }
 

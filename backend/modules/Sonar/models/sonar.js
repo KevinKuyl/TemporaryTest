@@ -15,7 +15,7 @@ export const SonarSchema = new Mongoose.Schema(
     unique: true
   },
   distance: {
-    type: Number,
+    type: String,
     required: true,
     unique: false,
     default: "0"
@@ -97,7 +97,9 @@ Sonar.updateSonar = async function ({ sonar }, { user }, pubsub) {
           }
         }
         await sonarToUpdate.save();
-        pubsub.publish('sonarUpdated', { sonarUpdated: sonarToUpdate });
+        console.log('emitting sonarUpdated');
+        await pubsub.publish('sonarUpdated', { sonarUpdated: sonarToUpdate });
+        console.log('sonarUpdated emitted');
         return sonarToUpdate;
       } else {
         return new Error(`Sonar not found.`, { argumentName: '_id' });
